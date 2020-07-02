@@ -182,6 +182,10 @@ zwave:
   enabled: false
   device: ttyACM0
 
+wyze:
+  enabled: false
+  device: wyze
+
 # Mount devices or folders from the host machine. Can be used for USB device mounting.
 hostMounts: []
   # Example

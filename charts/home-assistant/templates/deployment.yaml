@@ -119,6 +119,10 @@ spec:
         {{- end }}
         {{- end }}
       {{- end }}
+      {{- if .Values.wyze.enabled }}
+      nodeSelector:
+        device: wyze
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -188,6 +192,10 @@ spec:
           - mountPath: /dev/ttyACM0
             name: ttyacm
           {{- end }}
+          {{- if .Values.wyze.enabled }}
+          - mountPath: /dev/wyze
+            name: wyze
+          {{- end }}
           {{- range .Values.hostMounts }}
           {{- if .mountPath }}
           - mountPath: {{ .mountPath }}
@@ -212,7 +220,7 @@ spec:
           {{- end }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
-          {{- if or .Values.zwave.enabled (.Values.hostMounts) }}
+          {{- if or .Values.zwave.enabled (or (.Values.wyze.enabled) (.Values.hostMounts)) }}
           securityContext:
             privileged: true
           {{- end }}
@@ -442,6 +450,11 @@ spec:
       - name: ttyacm
         hostPath:
           path: /dev/{{.Values.zwave.device}}
+      {{- end }}
+      {{- if .Values.wyze.enabled }}
+      - name: wyze
+        hostPath:
+          path: /dev/{{.Values.wyze.device}}
       {{- end }}
       {{- range .Values.hostMounts }}
       - name: {{ .name }}
