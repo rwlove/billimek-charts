@@ -48,7 +48,7 @@ spec:
           - {{ . | quote }}
           {{- end }}
         {{- else }}
-        command: ['sh', '-c', '[ "$(ls {{ .Values.git.syncPath }})" ] || git clone {{ .Values.git.repo }} {{ .Values.git.syncPath }}']
+        command: ['sh', '-c', 'if [ $(git -C {{ .Values.git.syncPath }} rev-parse) ] ; then git clone {{ .Values.git.repo }} {{ .Values.git.syncPath }} ; else git -C {{ .Values.git.syncPath }} pull ; fi']
         {{- end }}
         volumeMounts:
         - mountPath: /config
