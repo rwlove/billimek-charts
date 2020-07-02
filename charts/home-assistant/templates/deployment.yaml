@@ -91,6 +91,34 @@ spec:
         {{- end }}
       {{- end }}
       {{- end }}
+      {{- if .Values.secret.enabled }}
+      - name: pull-secrets
+        image: "{{ .Values.git.image.repository }}:{{ .Values.git.image.tag }}"
+        imagePullPolicy: {{ .Values.git.image.pullPolicy }}
+        {{- if .Values.git.command }}
+        command:
+          {{- range .Values.git.command }}
+          - {{ . | quote }}
+          {{- end }}
+        {{- else }}
+        command: ['sh', '-c', 'git clone {{ .Values.secret.repo }} {{ .Values.secret.syncPath }}']
+        {{- end }}
+        volumeMounts:
+        - mountPath: /secrets
+          name: hass-secrets
+        - mountPath: {{ .Values.git.keyPath }}
+          name: git-secret
+        {{- if .Values.extraVolumeMounts }}{{ toYaml .Values.extraVolumeMounts | trim | nindent 8 }}{{ end }}
+        {{- if .Values.usePodSecurityContext }}
+        securityContext:
+          runAsUser: {{ default 0 .Values.runAsUser }}
+        {{- if and (.Values.runAsUser) (.Values.fsGroup) }}
+        {{- if not (eq .Values.runAsUser 0.0) }}
+          fsGroup: {{ .Values.fsGroup }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -154,6 +182,8 @@ spec:
             name: config
           - mountPath: /custom_components
             name: custom-components
+          - mountPath: /secrets
+            name: hass-secrets
           {{- if .Values.zwave.enabled }}
           - mountPath: /dev/ttyACM0
             name: ttyacm
@@ -402,6 +432,10 @@ spec:
       {{ end }}
       {{- if .Values.customcomponents.enabled }}
       - name: custom-components
+        emptyDir: {}
+      {{ end }}
+      {{- if .Values.secret.enabled }}
+      - name: hass-secrets
         emptyDir: {}
       {{ end }}
       {{- if .Values.zwave.enabled }}
